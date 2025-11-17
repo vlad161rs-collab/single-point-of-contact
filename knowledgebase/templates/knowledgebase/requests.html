@@ -1,0 +1,10 @@
+{% extends 'knowledgebase/base.html' %}
+{% block content %}
+<h2>Запросы</h2>
+<a href="{% url 'requests-page' %}" class="btn">Управление запросами</a>
+<ul>
+    {% for req in requests %}
+    <li>{{ req.title }} - {{ req.description }} ({{ req.status }})</li>
+    {% endfor %}
+</ul>
+{% endblock %}

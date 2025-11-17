@@ -1,0 +1,153 @@
+{% extends "knowledgebase/base.html" %}
+{% load static %}
+
+{% block title %}Регистрация - Портал самообслуживания{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 40px auto; padding: 20px;">
+    <h2>Запрос на регистрацию</h2>
+    <p class="text-muted">
+        Заполните форму ниже для подачи запроса на регистрацию. 
+        Ваш запрос будет рассмотрен администратором, и вы получите уведомление по email.
+    </p>
+
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Ошибки в форме:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ field }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        
+        <div class="form-group mb-3">
+            <label for="{{ form.username.id_for_label }}">Имя пользователя *</label>
+            {{ form.username }}
+            {% if form.username.help_text %}
+                <small class="form-text text-muted">{{ form.username.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="{{ form.email.id_for_label }}">Email *</label>
+            {{ form.email }}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="{{ form.first_name.id_for_label }}">Имя</label>
+                    {{ form.first_name }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="{{ form.last_name.id_for_label }}">Фамилия</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="{{ form.phone.id_for_label }}">Телефон</label>
+            {{ form.phone }}
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="{{ form.department.id_for_label }}">Отдел</label>
+            {{ form.department }}
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="{{ form.position.id_for_label }}">Должность</label>
+            {{ form.position }}
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="{{ form.requested_role.id_for_label }}">Запрашиваемая роль</label>
+            {{ form.requested_role }}
+            <small class="form-text text-muted">Обычно выбирается "Пользователь"</small>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="{{ form.password1.id_for_label }}">Пароль *</label>
+            {{ form.password1 }}
+            {% if form.password1.help_text %}
+                <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="{{ form.password2.id_for_label }}">Подтверждение пароля *</label>
+            {{ form.password2 }}
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Отправить запрос на регистрацию</button>
+            <a href="{% url 'login' %}" class="btn btn-secondary">Уже есть аккаунт? Войти</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-group label {
+        font-weight: 500;
+        margin-bottom: 5px;
+        display: block;
+    }
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 10px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+</style>
+{% endblock %}
+
+
+
+
+
+
+

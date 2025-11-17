@@ -1,0 +1,54 @@
+{% extends "knowledgebase/base.html" %}
+{% load static %}
+
+{% block nav %}{% endblock %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block content %}
+<div class="login-container">
+  <div class="login-header">
+    <div class="login-icon">🔐</div>
+    <h2>Вход в систему</h2>
+    <p>Войдите в свой аккаунт для доступа к системе</p>
+  </div>
+
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <strong>⚠️ Ошибка:</strong> Неверные имя пользователя или пароль.
+    </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'login' %}" class="login-form">
+    {% csrf_token %}
+    
+    <div class="form-group">
+      <label for="id_username">Имя пользователя</label>
+      {{ form.username }}
+    </div>
+
+    <div class="form-group">
+      <label for="id_password">Пароль</label>
+      {{ form.password }}
+    </div>
+
+    {% if next %}
+      <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+
+    <button type="submit" class="login-submit-btn">Войти</button>
+  </form>
+
+  <div class="login-links">
+    <a href="{% url 'password_reset' %}">🔑 Забыли пароль?</a>
+  </div>
+
+  <div class="login-help">
+    <p>Нужна помощь с учётной записью?</p>
+    <div class="login-help-links">
+      <a href="{% url 'portal:home' %}">🔐 Портал самообслуживания</a>
+      <a href="{% url 'knowledgebase:index' %}" class="help-link-knowledge">📚 База знаний</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

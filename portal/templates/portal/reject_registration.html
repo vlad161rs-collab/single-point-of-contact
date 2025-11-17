@@ -1,0 +1,63 @@
+{% extends "knowledgebase/base.html" %}
+{% load static %}
+
+{% block title %}Отклонить регистрацию{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 40px auto; padding: 20px;">
+    <h2>Отклонить запрос на регистрацию</h2>
+    
+    <div class="info-box" style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3>Информация о запросе</h3>
+        <table style="width: 100%;">
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">Имя пользователя:</td>
+                <td style="padding: 8px;">{{ reg_request.username }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">Email:</td>
+                <td style="padding: 8px;">{{ reg_request.email }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">Роль:</td>
+                <td style="padding: 8px;">{{ reg_request.get_requested_role_display }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group mb-3">
+            <label for="rejection_reason" style="font-weight: 500; margin-bottom: 5px; display: block;">
+                Причина отклонения (необязательно, будет отправлена пользователю по email):
+            </label>
+            <textarea name="rejection_reason" id="rejection_reason" rows="4" 
+                      style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;"
+                      placeholder="Укажите причину отклонения запроса..."></textarea>
+        </div>
+
+        <div class="warning-box" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <p style="margin: 0; color: #856404;">
+                <strong>Внимание:</strong> Пользователю будет отправлено уведомление об отклонении запроса.
+            </p>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-danger" style="padding: 12px 24px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                Подтвердить отклонение
+            </button>
+            <a href="{% url 'portal:registration_requests' %}" class="btn btn-secondary" style="padding: 12px 24px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+
+
+
+
+

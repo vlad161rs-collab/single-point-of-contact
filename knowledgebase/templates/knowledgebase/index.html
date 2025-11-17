@@ -1,0 +1,138 @@
+{% extends 'knowledgebase/base.html' %}
+{% load static %}
+
+{% block title %}База знаний{% endblock %}
+
+{% block content %}
+<div class="knowledgebase-container">
+  
+  <!-- Заголовок и инструкция -->
+  <div class="knowledgebase-header">
+    <h1>📚 База знаний</h1>
+    
+    <!-- Инструкция -->
+    <div class="instructions-box">
+      <h3>📖 Как пользоваться</h3>
+      <div class="instructions-box-grid">
+        <div>
+          <strong>📝 Управление статьями:</strong>
+          <ul>
+            {% if user.is_authenticated and perms.knowledgebase.add_article %}
+              <li>Создание новой статьи</li>
+            {% endif %}
+            <li>Поиск статей</li>
+            <li>Сортировка по алфавиту или дате</li>
+            <li>Просмотр содержимого</li>
+            {% if user.is_authenticated and perms.knowledgebase.change_article %}
+              <li>Редактирование статей</li>
+            {% endif %}
+            {% if user.is_authenticated and perms.knowledgebase.delete_article %}
+              <li>Удаление статей</li>
+            {% endif %}
+          </ul>
+        </div>
+        <div>
+          <strong>⚙️ Общие действия:</strong>
+          <ul>
+            <li>Поиск по названию и содержимому</li>
+            <li>Фильтрация и сортировка</li>
+            <li>Комментарии к статьям</li>
+            <li>Навигация между разделами</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Поиск и фильтры -->
+  <div class="search-section">
+    <form method="get" action="{% url 'knowledgebase:index' %}" class="search-form">
+      <div class="search-form-group">
+        <label>🔍 Поиск</label>
+        <input type="text" 
+               name="query"
+               placeholder="Поиск по названию или содержимому..."
+               value="{{ request.GET.query }}"
+               class="form-control">
+      </div>
+      <div class="search-form-group">
+        <label>📊 Сортировка</label>
+        <select name="sort_by" class="form-control">
+          <option value="">По умолчанию</option>
+          <option value="title" {% if request.GET.sort_by == 'title' %}selected{% endif %}>По алфавиту</option>
+          <option value="pub_date" {% if request.GET.sort_by == 'pub_date' %}selected{% endif %}>По дате создания</option>
+        </select>
+      </div>
+      <div>
+        <button type="submit" class="search-form-button">🔍 Найти</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Кнопка создания статьи -->
+  {% if user.is_authenticated and perms.knowledgebase.add_article %}
+    <a href="{% url 'knowledgebase:article_create' %}" class="create-article-btn">
+      ➕ Создать новую статью
+    </a>
+  {% endif %}
+
+  <!-- Список статей -->
+  <div class="articles-list">
+    <h2>📄 Статьи ({{ articles|length }})</h2>
+    
+    {% if articles %}
+      <div class="articles-grid">
+        {% for article in articles %}
+          <div class="article-card" onclick="window.location.href='{% url 'knowledgebase:article_detail' article.id %}'">
+            <div class="article-card-content">
+              <div class="article-card-main">
+                <h3>
+                  <a href="{% url 'knowledgebase:article_detail' article.id %}">
+                    {{ article.title }}
+                  </a>
+                </h3>
+                <p class="article-card-meta">
+                  📅 {{ article.pub_date|date:"d M Y H:i" }}
+                </p>
+                {% if article.image or article.video or article.audio %}
+                  <div class="article-card-media">
+                    {% if article.image %}<span>🖼️</span>{% endif %}
+                    {% if article.video %}<span>🎥</span>{% endif %}
+                    {% if article.audio %}<span>🎵</span>{% endif %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="article-card-actions">
+                {% if user.is_authenticated and perms.knowledgebase.change_article %}
+                  <a href="{% url 'knowledgebase:article_edit' article.id %}" 
+                     onclick="event.stopPropagation();"
+                     class="btn-edit">
+                    ✏️
+                  </a>
+                {% endif %}
+                {% if user.is_authenticated and perms.knowledgebase.delete_article %}
+                  <form action="{% url 'knowledgebase:article_delete' article.id %}"
+                        method="post"
+                        style="display:inline;"
+                        onclick="event.stopPropagation();">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            onclick="return confirm('Удалить статью?'); event.stopPropagation();"
+                            class="btn-delete">
+                      🗑️
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="no-articles">
+        Статей пока нет. {% if user.is_authenticated and perms.knowledgebase.add_article %}Создайте первую статью!{% else %}Войдите в систему для создания статей.{% endif %} 📝
+      </p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

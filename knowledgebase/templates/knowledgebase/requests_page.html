@@ -1,0 +1,206 @@
+{% extends 'knowledgebase/base.html' %}
+{% load static %}
+
+{% block title %}Единая точка обращений{% endblock %}
+
+{% block content %}
+<div class="requests-container">
+  
+  <!-- Заголовок и инструкция -->
+  <div class="requests-header">
+    <h1>🎫 Единая точка обращений</h1>
+    
+    <!-- Инструкция -->
+    <div class="requests-instructions-box">
+      <h3>📖 Как пользоваться</h3>
+      <div class="requests-instructions-grid">
+        <div>
+          <strong>🎫 Управление запросами:</strong>
+          <ul>
+            {% if user.is_authenticated %}
+              <li>Создание нового запроса</li>
+              <li>Добавление комментариев</li>
+              <li>Редактирование (при наличии прав)</li>
+              <li>Удаление (при наличии прав)</li>
+            {% else %}
+              <li>Просмотр доступен всем</li>
+              <li>Для создания войдите в систему</li>
+            {% endif %}
+          </ul>
+        </div>
+        <div>
+          <strong>⚙️ Общие действия:</strong>
+          <ul>
+            <li>🔍 Поиск по запросам</li>
+            <li>🔽 Фильтрация по статусу</li>
+            <li>🧭 Навигация между разделами</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Поиск и фильтрация -->
+  <div class="search-filter-section">
+    <form method="get" action="{% url 'knowledgebase:requests-page' %}" class="search-filter-form">
+      <div class="form-group">
+        <label>🔍 Поиск по запросам</label>
+        <input type="text" 
+               name="query"
+               placeholder="Поиск по названию или описанию..."
+               value="{{ query }}"
+               class="form-control">
+      </div>
+      <div class="form-group">
+        <label>🔽 Фильтр по статусу</label>
+        <select name="status" class="form-control">
+          <option value="">Все статусы</option>
+          <option value="New" {% if status_filter == 'New' %}selected{% endif %}>Новая</option>
+          <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>В работе</option>
+          <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Завершена</option>
+          <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Отменена</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">🔍 Найти</button>
+        {% if query or status_filter %}
+          <a href="{% url 'knowledgebase:requests-page' %}" class="btn btn-secondary">Сбросить</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Форма создания заявки -->
+  {% if user.is_authenticated %}
+    <div class="create-request-form">
+      <h2>➕ Создать новый запрос</h2>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Название запроса *</label>
+            {{ form.title }}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Описание *</label>
+            {{ form.description }}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.category.id_for_label }}">Категория</label>
+            {{ form.category }}
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">📤 Создать запрос</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <div class="alert alert-warning">
+      <p>Для создания запросов необходимо войти в систему.</p>
+      <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">🔐 Войти</a>
+    </div>
+  {% endif %}
+
+  <!-- Список заявок -->
+  <div class="requests-list">
+    <h2>📋 Список заявок {% if query or status_filter %}(найдено: {{ requests|length }}){% else %}({{ requests|length }}){% endif %}</h2>
+    
+    {% if requests %}
+      <div class="table-responsive">
+        <table class="requests-table">
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Описание</th>
+              <th>Категория</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requests %}
+              <tr>
+                <td>
+                  <a href="{% url 'knowledgebase:request_detail' req.id %}" class="request-link">
+                    {{ req.title }}
+                  </a>
+                </td>
+                <td class="request-description">
+                  {{ req.description|truncatewords:15 }}
+                </td>
+                <td>
+                  <span class="category-badge">
+                    {{ req.get_category_display }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge status-{{ req.status|lower|slugify }}">
+                    {{ req.get_status_display }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    {% if perms.knowledgebase.change_request %}
+                      <div class="status-buttons">
+                        <form method="post" action="{% url 'knowledgebase:change-request-status' req.id %}" style="display:inline;">
+                          {% csrf_token %}
+                          <input type="hidden" name="status" value="New">
+                          <button type="submit" 
+                                  class="btn btn-sm status-btn-new"
+                                  title="Установить статус: Новая">
+                            🆕
+                          </button>
+                        </form>
+                        <form method="post" action="{% url 'knowledgebase:change-request-status' req.id %}" style="display:inline;">
+                          {% csrf_token %}
+                          <input type="hidden" name="status" value="In Progress">
+                          <button type="submit" 
+                                  class="btn btn-sm status-btn-progress"
+                                  title="Установить статус: В работе">
+                            🔄
+                          </button>
+                        </form>
+                        <form method="post" action="{% url 'knowledgebase:change-request-status' req.id %}" style="display:inline;">
+                          {% csrf_token %}
+                          <input type="hidden" name="status" value="Completed">
+                          <button type="submit" 
+                                  class="btn btn-sm status-btn-completed"
+                                  title="Установить статус: Завершена">
+                            ✅
+                          </button>
+                        </form>
+                        <form method="post" action="{% url 'knowledgebase:change-request-status' req.id %}" style="display:inline;">
+                          {% csrf_token %}
+                          <input type="hidden" name="status" value="Cancelled">
+                          <button type="submit" 
+                                  class="btn btn-sm status-btn-cancelled"
+                                  title="Установить статус: Отменена">
+                            ❌
+                          </button>
+                        </form>
+                      </div>
+                    {% endif %}
+                    {% if perms.knowledgebase.delete_request %}
+                      <form method="post" action="{% url 'knowledgebase:delete-request' req.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                onclick="return confirm('Удалить запрос?')"
+                                class="btn btn-danger btn-sm">
+                          🗑️
+                        </button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="no-requests">Заявок пока нет. {% if user.is_authenticated %}Создайте первую заявку!{% else %}Войдите в систему для создания заявок.{% endif %} 🎫</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

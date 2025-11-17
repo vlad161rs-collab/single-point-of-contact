@@ -1,0 +1,125 @@
+{% extends "knowledgebase/base.html" %}
+{% load static %}
+
+{% block title %}Портал самообслуживания{% endblock %}
+
+{% block content %}
+<div class="portal-container">
+    <h2>Портал самообслуживания</h2>
+    
+    {% if user.is_authenticated %}
+        <div class="portal-welcome-box">
+            <h3>👋 Добро пожаловать, {{ user.username }}!</h3>
+            <p>Вы вошли в систему. Используйте меню для навигации.</p>
+        </div>
+
+        <div class="portal-services-grid">
+            <div class="portal-service-card">
+                <div class="portal-card-icon">📋</div>
+                <h3>Личный кабинет</h3>
+                <p>Управление профилем, изменение данных, смена пароля</p>
+                <a href="{% url 'portal:profile' %}" class="portal-card-btn">
+                    Перейти
+                </a>
+            </div>
+
+            <div class="portal-service-card">
+                <div class="portal-card-icon">📚</div>
+                <h3>База знаний</h3>
+                <p>Поиск статей, просмотр информации, комментарии</p>
+                <a href="{% url 'knowledgebase:index' %}" class="portal-card-btn">
+                    Перейти
+                </a>
+            </div>
+
+            <div class="portal-service-card">
+                <div class="portal-card-icon">🎫</div>
+                <h3>Единая точка обращений</h3>
+                <p>Создание заявок, отслеживание статуса, комментарии</p>
+                <a href="{% url 'knowledgebase:requests-page' %}" class="portal-card-btn">
+                    Перейти
+                </a>
+            </div>
+
+            {% if user.is_staff or user.profile.is_admin %}
+            <div class="portal-service-card portal-service-card-admin">
+                <div class="portal-card-icon">⚙️</div>
+                <h3>Администрирование</h3>
+                <p>Управление запросами на регистрацию, админ-панель</p>
+                <a href="{% url 'portal:registration_requests' %}" class="portal-card-btn portal-card-btn-warning">
+                    Запросы на регистрацию
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="portal-welcome-box">
+            <h3>👋 Добро пожаловать в Портал самообслуживания!</h3>
+            <p>Здесь вы можете зарегистрироваться, управлять своим профилем и работать с заявками.</p>
+        </div>
+        
+        <!-- Инструкция для неавторизованных -->
+        <div class="portal-instructions-section">
+            <h3>📖 Как пользоваться порталом</h3>
+            <div class="portal-instructions-grid">
+                <div class="portal-instruction-card">
+                    <h4>📝 Управление статьями</h4>
+                    <ul>
+                        <li>🔍 Поиск статей</li>
+                        <li>📊 Сортировка по алфавиту или дате</li>
+                        <li>👁️ Просмотр содержимого</li>
+                        <li>💬 Комментарии к статьям</li>
+                    </ul>
+                </div>
+                <div class="portal-instruction-card">
+                    <h4>🎫 Управление запросами</h4>
+                    <ul>
+                        <li>👁️ Просмотр доступен всем</li>
+                        <li>➕ Создание (после входа)</li>
+                        <li>💬 Комментарии (после входа)</li>
+                        <li>📊 Отслеживание статуса</li>
+                    </ul>
+                </div>
+                <div class="portal-instruction-card">
+                    <h4>⚙️ Общие действия</h4>
+                    <ul>
+                        <li>🔍 Поиск по статьям и запросам</li>
+                        <li>🔽 Фильтры и сортировка</li>
+                        <li>🧭 Навигация между разделами</li>
+                        <li>👤 Личный кабинет (после входа)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-services-grid">
+            <div class="portal-service-card">
+                <div class="portal-card-icon">🔐</div>
+                <h3>Регистрация</h3>
+                <p>Подайте запрос на регистрацию. После одобрения администратором вы получите доступ к системе.</p>
+                <a href="{% url 'portal:register' %}" class="portal-card-btn">
+                    Зарегистрироваться
+                </a>
+            </div>
+
+            <div class="portal-service-card">
+                <div class="portal-card-icon">📚</div>
+                <h3>База знаний</h3>
+                <p>Просмотр статей и информации (доступно без регистрации)</p>
+                <a href="{% url 'knowledgebase:index' %}" class="portal-card-btn">
+                    Перейти
+                </a>
+            </div>
+
+            <div class="portal-service-card">
+                <div class="portal-card-icon">🔑</div>
+                <h3>Вход в систему</h3>
+                <p>Уже зарегистрированы? Войдите в систему</p>
+                <a href="{% url 'login' %}" class="portal-card-btn portal-card-btn-success">
+                    Войти
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

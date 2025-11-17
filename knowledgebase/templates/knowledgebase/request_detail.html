@@ -1,0 +1,153 @@
+{% extends 'knowledgebase/base.html' %}
+{% load static %}
+
+{% block title %}Заявка: {{ req.title }}{% endblock %}
+
+{% block content %}
+<div class="request-container" style="max-width: 1000px; margin: 40px auto; padding: 20px;">
+  
+  <!-- Хлебные крошки -->
+  <nav style="margin-bottom: 20px;">
+    <a href="{% url 'knowledgebase:requests-page' %}" style="color: #3498db; text-decoration: none;">← Единая точка обращений</a>
+    <span style="color: #7f8c8d; margin: 0 10px;">/</span>
+    <span style="color: #7f8c8d;">{{ req.title|truncatewords:5 }}</span>
+  </nav>
+
+  <!-- Заявка -->
+  <div class="request-content" style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+      <h1 style="color: #2c3e50; margin: 0; font-size: 2em; flex: 1;">{{ req.title }}</h1>
+      <span class="status-badge" 
+            style="padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; white-space: nowrap;
+                   {% if req.status == 'New' %}background: #3498db; color: white;
+                   {% elif req.status == 'In Progress' %}background: #f39c12; color: white;
+                   {% elif req.status == 'Completed' %}background: #27ae60; color: white;
+                   {% else %}background: #95a5a6; color: white;{% endif %}">
+        {{ req.get_status_display }}
+      </span>
+    </div>
+
+    <div class="request-meta" style="display: flex; gap: 20px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #ecf0f1; color: #7f8c8d; font-size: 14px; flex-wrap: wrap;">
+      <span>📁 Категория: <strong style="color: #2c3e50;">{{ req.get_category_display }}</strong></span>
+      {% if req.created_at %}
+        <span>📅 Создано: {{ req.created_at|date:"d M Y H:i" }}</span>
+      {% endif %}
+    </div>
+
+    <div class="request-description" style="line-height: 1.8; color: #34495e; font-size: 16px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+      {{ req.description|linebreaks }}
+    </div>
+  </div>
+
+  <!-- Комментарии -->
+  <section class="comments-section" style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 2px 15px rgba(0,0,0,0.1);">
+    <h2 style="color: #2c3e50; margin-top: 0; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+      💬 Комментарии
+      <span style="background: #3498db; color: white; padding: 5px 12px; border-radius: 20px; font-size: 14px;">
+        {{ comments|length }}
+      </span>
+    </h2>
+
+    {% if comments %}
+      <div class="comments-list" style="margin-bottom: 30px;">
+        {% for comment in comments %}
+          <div class="comment-item" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #3498db;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+              <div>
+                <strong style="color: #2c3e50; font-size: 16px;">
+                  {% if comment.user %}
+                    👤 {{ comment.user.username }}
+                  {% else %}
+                    👤 Аноним
+                  {% endif %}
+                </strong>
+                <span style="color: #7f8c8d; font-size: 13px; margin-left: 10px;">
+                  {{ comment.created_at|date:"d M Y H:i" }}
+                </span>
+              </div>
+              {% if user.is_authenticated %}
+                {% if perms.knowledgebase.delete_comment or comment.user_id == user.id %}
+                  <form method="post" action="{% url 'knowledgebase:comment_delete' comment.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            onclick="return confirm('Удалить комментарий?')"
+                            style="background: #e74c3c; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;"
+                            onmouseover="this.style.background='#c0392b';"
+                            onmouseout="this.style.background='#e74c3c';">
+                      🗑️
+                    </button>
+                  </form>
+                {% endif %}
+              {% endif %}
+            </div>
+            <p style="color: #34495e; margin: 0; line-height: 1.6;">{{ comment.text|linebreaks }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: #7f8c8d; text-align: center; padding: 30px;">Комментарии к заявке отсутствуют. 💭</p>
+    {% endif %}
+
+    <hr style="margin: 30px 0; border: none; border-top: 2px solid #ecf0f1;">
+
+    {% if user.is_authenticated %}
+      <div class="add-comment">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Добавить комментарий</h3>
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group" style="margin-bottom: 15px;">
+            {{ form.text }}
+          </div>
+          <button type="submit" 
+                  style="padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102, 126, 234, 0.4)';"
+                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            📤 Отправить комментарий
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 20px; background: #ecf0f1; border-radius: 10px;">
+        <p style="color: #7f8c8d; margin: 0 0 15px 0;">
+          Чтобы оставить комментарий,
+        </p>
+        <a href="{% url 'login' %}?next={{ request.path }}" 
+           style="padding: 10px 25px; background: #3498db; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-block;"
+           onmouseover="this.style.background='#2980b9';"
+           onmouseout="this.style.background='#3498db';">
+          🔐 Войдите в систему
+        </a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Назад -->
+  <div style="margin-top: 30px;">
+    <a href="{% url 'knowledgebase:requests-page' %}" 
+       style="padding: 12px 25px; background: #95a5a6; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-block; transition: all 0.3s;"
+       onmouseover="this.style.background='#7f8c8d'; this.style.transform='translateY(-2px)';"
+       onmouseout="this.style.background='#95a5a6'; this.style.transform='translateY(0)';">
+      ← Назад к списку заявок
+    </a>
+  </div>
+</div>
+
+<style>
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+  }
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+  }
+</style>
+{% endblock %}

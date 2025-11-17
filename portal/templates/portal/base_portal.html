@@ -1,0 +1,14 @@
+{% extends "knowledgebase/base.html" %}
+{% load static %}
+
+
+{% block title %}{% block portal_title %}Портал самообслуживания{% endblock %}{% endblock %}
+
+
+{% block extra_head %}{% endblock %}
+
+
+{% block content %}
+  {% include "portal/_portal_nav.html" %}
+  {% block portal_content %}{% endblock %}
+{% endblock %}
