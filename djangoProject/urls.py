@@ -39,19 +39,13 @@ urlpatterns = [
     path('accounts/reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
 ]
 
-# Раздача статических файлов
+# Раздача статических и медиа файлов
 if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
-    # В продакшене статические файлы обслуживаются WhiteNoise
-    # Медиа файлы нужно обслуживать отдельно или использовать облачное хранилище
     from django.views.static import serve
     from django.urls import re_path
-    
-    # Раздача медиа файлов в продакшене (временное решение)
-    # ВАЖНО: На Heroku файловая система эфемерна, медиа файлы будут потеряны при перезапуске
-    # Для продакшена рекомендуется использовать облачное хранилище (AWS S3, Cloudinary и т.д.)
     urlpatterns += [
         re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     ]

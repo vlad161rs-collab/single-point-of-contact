@@ -68,7 +68,6 @@ class RequestViewsTest(TestCase):
             username='testuser',
             password='testpass123'
         )
-        # Профиль создается автоматически через сигналы, используем get_or_create
         profile, created = UserProfile.objects.get_or_create(user=self.user)
         if created:
             profile.role = 'user'
@@ -104,7 +103,6 @@ class UserProfileTest(TestCase):
             email='test@example.com'
         )
         self.department = Department.objects.create(name='IT')
-        # Профиль создается автоматически через сигналы, используем get_or_create
         self.profile, created = UserProfile.objects.get_or_create(user=self.user)
         self.profile.role = 'moderator'
         self.profile.department = self.department

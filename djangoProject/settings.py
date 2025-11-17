@@ -7,17 +7,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-j6a9=s&r!ez$n(-5*8802addx4*h-sbc@ev3vebmwfa!($wpag')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# Heroku автоматически устанавливает ALLOWED_HOSTS через переменную окружения
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
-# Если ALLOWED_HOSTS не установлен, используем значения по умолчанию
-# В продакшене (Heroku) разрешаем все поддомены herokuapp.com
 if not ALLOWED_HOSTS or (len(ALLOWED_HOSTS) == 1 and not ALLOWED_HOSTS[0]):
     if DEBUG:
         ALLOWED_HOSTS = ['localhost', '127.0.0.1']
     else:
-        # В продакшене разрешаем все поддомены Heroku
-        ALLOWED_HOSTS = ['.herokuapp.com', 'single-point-of-contact-570955226190.herokuapp.com']
+        ALLOWED_HOSTS = ['.herokuapp.com', '.onrender.com', '.railway.app', 'single-point-of-contact-570955226190.herokuapp.com']
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'
@@ -25,12 +21,8 @@ EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'xok1611995@yandex.ru')
-# Получаем пароль из переменной окружения или из файла .env
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-# ВРЕМЕННО: для тестирования можно указать пароль здесь (удалите после настройки .env!)
-# EMAIL_HOST_PASSWORD = 'ohzoflhqidrkzfya'
 
-# Если пароль не установлен в переменной окружения, попробуем прочитать из .env файла
 if not EMAIL_HOST_PASSWORD:
     try:
         from pathlib import Path
@@ -48,27 +40,17 @@ if not EMAIL_HOST_PASSWORD:
         if DEBUG:
             print(f"Ошибка чтения .env файла: {e}")
 
-# Отладочная информация (только в режиме DEBUG)
-# Используем переменную окружения для предотвращения дублирования сообщения при autoreload
 if DEBUG and not os.environ.get('_EMAIL_PASSWORD_LOGGED'):
     if EMAIL_HOST_PASSWORD:
-        print(f"✓ EMAIL_HOST_PASSWORD установлен (длина: {len(EMAIL_HOST_PASSWORD)} символов)")
-        print(f"  Источник: {'переменная окружения' if os.environ.get('EMAIL_HOST_PASSWORD') else 'файл .env'}")
+        print(f"EMAIL_HOST_PASSWORD установлен (длина: {len(EMAIL_HOST_PASSWORD)} символов)")
         os.environ['_EMAIL_PASSWORD_LOGGED'] = '1'
     else:
-        print("⚠️ ВНИМАНИЕ: EMAIL_HOST_PASSWORD не установлен! Email не будет работать.")
-        print("   Варианты решения:")
-        print("   1. Установите переменную окружения в ТОЙ ЖЕ сессии PowerShell, где запускаете сервер:")
-        print("      $env:EMAIL_HOST_PASSWORD='ваш_пароль_приложения'")
-        print("   2. Создайте файл .env в корне проекта с содержимым:")
-        print("      EMAIL_HOST_PASSWORD=ваш_пароль_приложения")
-        print("   3. Временно укажите пароль прямо в settings.py (только для тестирования)")
+        print("EMAIL_HOST_PASSWORD не установлен. Email не будет работать.")
         os.environ['_EMAIL_PASSWORD_LOGGED'] = '1'
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 ADMIN_EMAIL = 'xok1611995@yandex.ru'
 
-# Дополнительные настройки для правильной аутентификации
 EMAIL_TIMEOUT = 10
 
 LOGIN_URL = 'login'
@@ -91,7 +73,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Для статических файлов в продакшене
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -121,11 +103,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'djangoProject.wsgi.application'
 
-# Настройка базы данных
-# Используем PostgreSQL в продакшене (Heroku), SQLite в разработке
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Если DATABASE_URL не установлен в переменной окружения, попробуем прочитать из .env файла
 if not DATABASE_URL:
     try:
         env_file = Path(BASE_DIR) / '.env'
@@ -143,7 +122,6 @@ if not DATABASE_URL:
             print(f"Ошибка чтения DATABASE_URL из .env файла: {e}")
 
 if DATABASE_URL:
-    # Продакшен: PostgreSQL на Heroku
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
@@ -152,7 +130,6 @@ if DATABASE_URL:
         )
     }
 else:
-    # Разработка: SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -180,8 +157,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Настройки безопасности для продакшена
-# Heroku использует HTTPS, поэтому включаем безопасные настройки
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -193,14 +168,12 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Настройки CSRF
-CSRF_COOKIE_SECURE = not DEBUG  # True только для HTTPS (в продакшене)
+CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
-# Настройки сессий
-SESSION_COOKIE_SECURE = not DEBUG  # True только для HTTPS (в продакшене)
+SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
@@ -210,18 +183,13 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# WhiteNoise для статических файлов в продакшене
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Для Heroku: медиа файлы лучше хранить в облачном хранилище (S3, Cloudinary и т.д.)
-# Пока используем локальное хранилище
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Ensure logs directory exists
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
 

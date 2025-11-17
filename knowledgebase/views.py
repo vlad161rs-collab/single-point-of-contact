@@ -25,7 +25,6 @@ def index(request):
 
     if sort_by:
         articles = articles.order_by(sort_by)
-    # Default ordering is handled by model Meta
 
     return render(request, 'knowledgebase/index.html', {'articles': articles})
 
@@ -42,23 +41,20 @@ def article_detail(request, article_id):
         if form.is_valid():
             try:
                 comment = form.save(commit=False)
-                # Устанавливаем article и user ПЕРЕД сохранением
                 comment.article = article
-                comment.request = None  # Явно устанавливаем request в None
+                comment.request = None
                 if request.user and request.user.is_authenticated:
                     comment.user = request.user
                 else:
                     messages.error(request, 'Вы должны быть авторизованы для добавления комментария.')
                     return redirect('knowledgebase:article_detail', article_id=article.id)
-                # Теперь валидация пройдет успешно, так как article установлен
-                comment.full_clean()  # Явно вызываем валидацию после установки полей
+                comment.full_clean()
                 comment.save()
                 messages.success(request, 'Комментарий успешно добавлен.')
                 return redirect('knowledgebase:article_detail', article_id=article.id)
             except Exception as e:
                 import traceback
                 messages.error(request, f'Ошибка при сохранении комментария: {str(e)}')
-                # Логируем полную ошибку для отладки
                 print(f"Ошибка сохранения комментария: {traceback.format_exc()}")
         else:
             messages.error(request, f'Пожалуйста, исправьте ошибки в форме: {form.errors}')
@@ -158,7 +154,6 @@ def change_request_status(request, request_id):
         req.status = new_status
         req.save()
         
-        # Отправляем уведомление об изменении статуса
         from .signals import send_request_status_notification
         user_email = req.created_by.email if req.created_by and req.created_by.email else None
         send_request_status_notification(req, old_status, req.status, user_email=user_email)
@@ -190,16 +185,14 @@ def add_comment_to_request(request, request_id):
     if form.is_valid():
         try:
             comment = form.save(commit=False)
-            # Устанавливаем request и user ПЕРЕД сохранением
             comment.request = req
-            comment.article = None  # Явно устанавливаем article в None
+            comment.article = None
             if request.user and request.user.is_authenticated:
                 comment.user = request.user
             else:
                 messages.error(request, 'Вы должны быть авторизованы для добавления комментария.')
                 return redirect('knowledgebase:requests-page')
-            # Теперь валидация пройдет успешно, так как request установлен
-            comment.full_clean()  # Явно вызываем валидацию после установки полей
+            comment.full_clean()
             comment.save()
             messages.success(request, 'Комментарий успешно добавлен.')
         except Exception as e:
@@ -228,7 +221,6 @@ class RequestAPI(APIView):
     def post(self, request):
         serializer = RequestSerializer(data=request.data)
         if serializer.is_valid():
-            # Устанавливаем создателя заявки
             serializer.save(created_by=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -247,16 +239,14 @@ def request_detail(request, request_id):
         if form.is_valid():
             try:
                 comment = form.save(commit=False)
-                # Устанавливаем request и user ПЕРЕД сохранением
                 comment.request = req
-                comment.article = None  # Явно устанавливаем article в None
+                comment.article = None
                 if request.user and request.user.is_authenticated:
                     comment.user = request.user
                 else:
                     messages.error(request, 'Вы должны быть авторизованы для добавления комментария.')
                     return redirect('knowledgebase:request_detail', request_id=req.id)
-                # Теперь валидация пройдет успешно, так как request установлен
-                comment.full_clean()  # Явно вызываем валидацию после установки полей
+                comment.full_clean()
                 comment.save()
                 messages.success(request, 'Комментарий успешно добавлен.')
                 return redirect('knowledgebase:request_detail', request_id=req.id)
@@ -285,7 +275,6 @@ def article_edit(request, article_id):
         form = ArticleForm(request.POST, request.FILES, instance=article)
         if form.is_valid():
             article = form.save(commit=False)
-            # Если у статьи еще нет автора, устанавливаем текущего пользователя
             if not article.author:
                 article.author = request.user
             article.save()
@@ -306,7 +295,6 @@ def article_edit(request, article_id):
 def comment_delete(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
 
-    # безопасно достаём автора (на случай старых комментариев без user)
     author_id = getattr(comment, 'user_id', None)
 
     if not (

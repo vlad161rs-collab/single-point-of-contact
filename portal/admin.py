@@ -57,16 +57,14 @@ class UserRegistrationRequestAdmin(admin.ModelAdmin):
         from django.utils import timezone
         
         for reg_request in queryset.filter(status='pending'):
-            # Создаем пользователя
             user = User.objects.create_user(
                 username=reg_request.username,
                 email=reg_request.email,
                 first_name=reg_request.first_name,
                 last_name=reg_request.last_name,
-                is_active=True  # Активируем сразу после одобрения
+                is_active=True
             )
             
-            # Создаем профиль
             UserProfile.objects.create(
                 user=user,
                 role=reg_request.requested_role,
@@ -75,7 +73,6 @@ class UserRegistrationRequestAdmin(admin.ModelAdmin):
                 position=reg_request.position
             )
             
-            # Обновляем запрос
             reg_request.status = 'approved'
             reg_request.reviewed_by = request.user
             reg_request.reviewed_at = timezone.now()

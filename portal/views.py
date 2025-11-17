@@ -38,9 +38,9 @@ def dashboard(request):
     # Статистика для пользователя
     if profile.role == 'user':
         context['my_requests'] = Request.objects.filter(
-            # В будущем добавить поле created_by
+            created_by=request.user
         )[:5]
-        context['my_requests_count'] = Request.objects.count()  # Временная заглушка
+        context['my_requests_count'] = Request.objects.filter(created_by=request.user).count()
         context['my_comments'] = Comment.objects.filter(user=request.user)[:5]
         return render(request, 'portal/dashboard_user.html', context)
     
@@ -68,7 +68,7 @@ def dashboard(request):
             Q(status='New') | Q(status='In Progress')
         )[:10]
         context['my_assigned_requests'] = Request.objects.filter(
-            # В будущем добавить поле assigned_to
+            status__in=['New', 'In Progress']
         )[:10]
         return render(request, 'portal/dashboard_support.html', context)
     
@@ -92,7 +92,6 @@ def register_request(request):
                 'Вы получите уведомление по email после рассмотрения.'
             )
             
-            # Отправляем email админу о новом запросе
             try:
                 admin_email = getattr(settings, 'ADMIN_EMAIL', None)
                 if admin_email:
@@ -106,7 +105,7 @@ def register_request(request):
                         fail_silently=True,
                     )
             except Exception:
-                pass  # Игнорируем ошибки отправки email
+                pass
             
             return redirect('portal:register_success')
     else:
@@ -149,10 +148,9 @@ def change_password(request):
         form = PasswordChangeCustomForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # Обновляем сессию
+            update_session_auth_hash(request, user)
             messages.success(request, 'Пароль успешно изменен.')
             
-            # Отправляем email уведомление пользователю на его email
             try:
                 if request.user.email:
                     email_sent = send_mail(
@@ -162,7 +160,7 @@ def change_password(request):
                                f'Ссылка для входа: http://127.0.0.1:8000/accounts/login/',
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[request.user.email],
-                        fail_silently=False,  # Не игнорируем ошибки для отладки
+                        fail_silently=False,
                     )
                     if not email_sent:
                         messages.warning(request, 'Пароль изменен, но не удалось отправить email-уведомление.')
@@ -204,9 +202,7 @@ def approve_registration(request, request_id):
     reg_request = get_object_or_404(UserRegistrationRequest, id=request_id, status='pending')
     
     if request.method == 'POST':
-        # Проверяем, не существует ли уже пользователь с таким username
         if User.objects.filter(username=reg_request.username).exists():
-            # Автоматически отклоняем заявку с причиной
             reg_request.status = 'rejected'
             reg_request.reviewed_by = request.user
             reg_request.reviewed_at = timezone.now()
@@ -218,9 +214,7 @@ def approve_registration(request, request_id):
             )
             return redirect('portal:registration_requests')
         
-        # Проверяем, не существует ли уже пользователь с таким email
         if User.objects.filter(email=reg_request.email).exists():
-            # Автоматически отклоняем заявку с причиной
             reg_request.status = 'rejected'
             reg_request.reviewed_by = request.user
             reg_request.reviewed_at = timezone.now()
@@ -232,14 +226,9 @@ def approve_registration(request, request_id):
             )
             return redirect('portal:registration_requests')
         
-        # Создаем пользователя
-        user_password = None  # Инициализируем переменную
+        user_password = None
         try:
-            # Определяем is_staff в зависимости от роли
             is_staff = reg_request.requested_role in ['admin', 'moderator']
-            
-            # Используем пароль из формы регистрации, если он есть
-            # Пароль сохраняется в поле password_hash при создании заявки
             user_password = reg_request.password_hash if reg_request.password_hash else None
             
             user = User.objects.create_user(
@@ -248,22 +237,18 @@ def approve_registration(request, request_id):
                 first_name=reg_request.first_name,
                 last_name=reg_request.last_name,
                 is_active=True,
-                is_staff=is_staff  # Устанавливаем статус персонала
+                is_staff=is_staff
             )
             
-            # Устанавливаем пароль
             if user_password:
-                # Используем пароль из формы регистрации
                 user.set_password(user_password)
             else:
-                # Если пароль не сохранен, создаем временный
                 import secrets
                 user_password = secrets.token_urlsafe(12)
                 user.set_password(user_password)
             
             user.save()
         except IntegrityError as e:
-            # Автоматически отклоняем заявку с причиной
             reg_request.status = 'rejected'
             reg_request.reviewed_by = request.user
             reg_request.reviewed_at = timezone.now()
@@ -275,7 +260,6 @@ def approve_registration(request, request_id):
             )
             return redirect('portal:registration_requests')
         
-        # Обновляем профиль (он уже создан автоматически через сигнал)
         profile, created = UserProfile.objects.get_or_create(user=user)
         profile.role = reg_request.requested_role
         profile.department = reg_request.department
@@ -283,21 +267,16 @@ def approve_registration(request, request_id):
         profile.position = reg_request.position
         profile.save()
         
-        # Обновляем запрос
         reg_request.status = 'approved'
         reg_request.reviewed_by = request.user
         reg_request.reviewed_at = timezone.now()
         reg_request.save()
         
-        # Отправляем email пользователю на его зарегистрированный email
         try:
             if user.email:
-                # Определяем, какой пароль использовать в письме
                 if user_password and user_password == reg_request.password_hash:
-                    # Пароль был указан при регистрации - не показываем его в письме
                     password_message = 'пароль, указанный при регистрации'
                 else:
-                    # Временный пароль - показываем его
                     password_message = user_password
                 
                 email_sent = send_mail(
@@ -310,7 +289,7 @@ def approve_registration(request, request_id):
                            f'После входа вы сможете изменить пароль в личном кабинете.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
-                    fail_silently=False,  # Не игнорируем ошибки для отладки
+                    fail_silently=False,
                 )
                 if email_sent:
                     messages.success(request, f'Запрос одобрен. Пользователь {user.username} создан. Email с данными для входа отправлен на {user.email}.')
@@ -342,7 +321,6 @@ def reject_registration(request, request_id):
         reg_request.rejection_reason = rejection_reason
         reg_request.save()
         
-        # Отправляем email пользователю на email из запроса на регистрацию
         try:
             if reg_request.email:
                 send_mail(
@@ -351,7 +329,7 @@ def reject_registration(request, request_id):
                            f'Причина: {rejection_reason or "Не указана"}\n\n'
                            f'Если у вас есть вопросы, свяжитесь с администратором.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[reg_request.email],  # Email из запроса на регистрацию
+                    recipient_list=[reg_request.email],
                     fail_silently=True,
                 )
         except Exception:

@@ -56,12 +56,14 @@ Thumbs.db
 # Backups
 backups/
 
-# Временные скрипты настройки (можно удалить после развёртывания)
+# Временные скрипты настройки
 setup_*.py
 setup_*.ps1
 setup_*.bat
 setup_*.sql
 create_db*.py
 create_db*.sql
-check_superuser.py
+check_*.py
+create_superuser.py
+deploy_*.ps1
 

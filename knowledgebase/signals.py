@@ -10,7 +10,6 @@ from .models import Request, Comment
 def notify_request_created_or_updated(sender, instance, created, **kwargs):
     """Уведомление о создании или изменении заявки"""
     if created:
-        # Уведомление админу о новой заявке
         try:
             admin_email = getattr(settings, 'ADMIN_EMAIL', None)
             if admin_email:
@@ -43,23 +42,19 @@ def notify_comment_added(sender, instance, created, **kwargs):
             recipients = []
             
             if instance.request:
-                # Отправляем уведомление автору заявки
                 if instance.request.created_by and instance.request.created_by.email:
                     if instance.request.created_by.email != instance.user.email:
                         recipients.append(instance.request.created_by.email)
                 
-                # Также отправляем админу
                 admin_email = getattr(settings, 'ADMIN_EMAIL', None)
                 if admin_email and admin_email not in recipients:
                     recipients.append(admin_email)
             
             elif instance.article:
-                # Отправляем уведомление автору статьи
                 if instance.article.author and instance.article.author.email:
                     if instance.article.author.email != instance.user.email:
                         recipients.append(instance.article.author.email)
                 
-                # Также отправляем админу
                 admin_email = getattr(settings, 'ADMIN_EMAIL', None)
                 if admin_email and admin_email not in recipients:
                     recipients.append(admin_email)
@@ -93,22 +88,18 @@ def send_request_status_notification(request_obj, old_status, new_status, user_e
     try:
         recipients = []
         
-        # Уведомление пользователю, если указан его email
         if user_email:
             recipients.append(user_email)
         
-        # Уведомление автору заявки
         if request_obj.created_by and request_obj.created_by.email:
             if request_obj.created_by.email not in recipients:
                 recipients.append(request_obj.created_by.email)
         
-        # Уведомление админу
         admin_email = getattr(settings, 'ADMIN_EMAIL', None)
         if admin_email and admin_email not in recipients:
             recipients.append(admin_email)
         
         if recipients:
-            # Получаем отображаемые названия статусов
             status_display_map = {
                 'New': 'Новая',
                 'In Progress': 'В работе',
