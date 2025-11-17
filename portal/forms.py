@@ -35,11 +35,13 @@ class UserRegistrationRequestForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         departments = Department.objects.all().order_by('name')
         self.fields['department'].queryset = departments
+        self.fields['department'].widget.attrs.update({'class': 'form-control'})
         if departments.exists():
-            self.fields['department'].empty_label = 'Выберите отдел'
+            self.fields['department'].empty_label = 'Выберите отдел (необязательно)'
         else:
             self.fields['department'].empty_label = 'Нет доступных отделов'
         self.fields['department'].required = False
+        self.fields['department'].widget.attrs['style'] = 'width: 100%;'
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -105,11 +107,13 @@ class UserProfileForm(forms.ModelForm):
             self.fields['email'].initial = user.email
         departments = Department.objects.all().order_by('name')
         self.fields['department'].queryset = departments
+        self.fields['department'].widget.attrs.update({'class': 'form-control'})
         if departments.exists():
             self.fields['department'].empty_label = 'Выберите отдел (необязательно)'
         else:
             self.fields['department'].empty_label = 'Нет доступных отделов'
         self.fields['department'].required = False
+        self.fields['department'].widget.attrs['style'] = 'width: 100%;'
 
     def save(self, user=None, commit=True):
         instance = super().save(commit=False)
