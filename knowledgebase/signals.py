@@ -2,7 +2,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
-from django.template.loader import render_to_string
+from django.urls import reverse
 from .models import Request, Comment
 
 
@@ -19,7 +19,9 @@ def notify_request_created_or_updated(sender, instance, created, **kwargs):
                 message += f'Описание: {instance.description[:200]}...\n'
                 message += f'Категория: {instance.get_category_display()}\n'
                 message += f'Статус: {instance.get_status_display()}\n\n'
-                message += f'Просмотреть заявку: http://127.0.0.1:8000/knowledgebase/requests/{instance.id}/'
+                request_path = reverse('knowledgebase:request_detail', args=[instance.id])
+                request_url = f"{settings.BASE_URL}{request_path}"
+                message += f'Просмотреть заявку: {request_url}'
                 
                 send_mail(
                     subject=subject,
@@ -65,11 +67,15 @@ def notify_comment_added(sender, instance, created, **kwargs):
                 message += f'{instance.text[:200]}{"..." if len(instance.text) > 200 else ""}\n\n'
                 
                 if instance.request:
+                    request_path = reverse('knowledgebase:request_detail', args=[instance.request.id])
+                    request_url = f"{settings.BASE_URL}{request_path}"
                     message += f'К заявке: {instance.request.title}\n'
-                    message += f'Ссылка: http://127.0.0.1:8000/knowledgebase/requests/{instance.request.id}/'
+                    message += f'Ссылка: {request_url}'
                 elif instance.article:
+                    article_path = reverse('knowledgebase:article_detail', args=[instance.article.id])
+                    article_url = f"{settings.BASE_URL}{article_path}"
                     message += f'К статье: {instance.article.title}\n'
-                    message += f'Ссылка: http://127.0.0.1:8000/knowledgebase/article/{instance.article.id}/'
+                    message += f'Ссылка: {article_url}'
                 
                 send_mail(
                     subject=subject,
@@ -115,7 +121,9 @@ def send_request_status_notification(request_obj, old_status, new_status, user_e
             message += f'Описание: {request_obj.description[:200]}{"..." if len(request_obj.description) > 200 else ""}\n\n'
             message += f'Старый статус: {old_status_display}\n'
             message += f'Новый статус: {new_status_display}\n\n'
-            message += f'Просмотреть заявку: http://127.0.0.1:8000/knowledgebase/requests/{request_obj.id}/'
+            request_path = reverse('knowledgebase:request_detail', args=[request_obj.id])
+            request_url = f"{settings.BASE_URL}{request_path}"
+            message += f'Просмотреть заявку: {request_url}'
             
             send_mail(
                 subject=subject,

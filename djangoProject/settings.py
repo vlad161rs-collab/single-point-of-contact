@@ -5,7 +5,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-j6a9=s&r!ez$n(-5*8802addx4*h-sbc@ev3vebmwfa!($wpag')
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'  # Временно True для отладки
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
@@ -13,7 +13,7 @@ if not ALLOWED_HOSTS or (len(ALLOWED_HOSTS) == 1 and not ALLOWED_HOSTS[0]):
     if DEBUG:
         ALLOWED_HOSTS = ['localhost', '127.0.0.1']
     else:
-        ALLOWED_HOSTS = ['.herokuapp.com', '.onrender.com', '.railway.app', 'single-point-of-contact-570955226190.herokuapp.com']
+        ALLOWED_HOSTS = ['.herokuapp.com', 'single-point-of-contact-570955226190.herokuapp.com']
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'
@@ -50,6 +50,7 @@ if DEBUG and not os.environ.get('_EMAIL_PASSWORD_LOGGED'):
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 ADMIN_EMAIL = 'xok1611995@yandex.ru'
+BASE_URL = os.environ.get('BASE_URL', 'http://127.0.0.1:8000' if DEBUG else 'https://single-point-of-contact-570955226190.herokuapp.com')
 
 EMAIL_TIMEOUT = 10
 
@@ -68,8 +69,6 @@ INSTALLED_APPS = [
     'rest_framework',
     "portal"
 ]
-
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
