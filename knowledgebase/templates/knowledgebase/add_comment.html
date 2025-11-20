@@ -1,0 +1,15 @@
+{% extends 'knowledgebase/base.html' %}
+
+{% block content %}
+<h2>Добавить комментарий</h2>
+
+<p>Добавление комментария к запросу: <strong>{{ request.title }}</strong></p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Отправить</button>
+</form>
+
+<a href="{% url 'requests-page' %}">Вернуться к управлению запросами</a>
+{% endblock %}

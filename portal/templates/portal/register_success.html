@@ -1,0 +1,67 @@
+{% extends "knowledgebase/base.html" %}
+{% load static %}
+
+{% block title %}Запрос отправлен - Портал самообслуживания{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 40px auto; padding: 20px; text-align: center;">
+    <div class="success-message" style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="color: #155724; margin-bottom: 15px;">✓ Запрос успешно отправлен!</h2>
+        <p style="color: #155724; font-size: 16px; line-height: 1.6;">
+            Ваш запрос на регистрацию был успешно отправлен администратору на рассмотрение.
+        </p>
+        <p style="color: #155724; font-size: 16px; line-height: 1.6;">
+            Вы получите уведомление по email после рассмотрения вашего запроса.
+        </p>
+    </div>
+
+    <div class="info-box" style="background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #004085; margin-bottom: 15px;">Что дальше?</h3>
+        <ul style="text-align: left; color: #004085; line-height: 1.8;">
+            <li>Администратор рассмотрит ваш запрос</li>
+            <li>Вы получите email с результатом рассмотрения</li>
+            <li>При одобрении вы получите временные учетные данные для входа</li>
+            <li>После входа обязательно смените пароль в личном кабинете</li>
+        </ul>
+    </div>
+
+    <div>
+        <a href="{% url 'portal:home' %}" class="btn btn-primary">Вернуться на главную</a>
+        <a href="{% url 'login' %}" class="btn btn-secondary">Уже есть аккаунт? Войти</a>
+    </div>
+</div>
+
+<style>
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        margin: 10px;
+        font-size: 16px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+</style>
+{% endblock %}
+
+
+
+
+
+
+

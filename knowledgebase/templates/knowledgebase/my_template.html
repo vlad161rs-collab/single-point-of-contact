@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Детали объектов</title>
+</head>
+<body>
+    <h1>Список объектов</h1>
+    <ul>
+        {% for obj in objects %}
+            <li>{{ obj.name }} - Дополнительные детали: {{ obj.related_model.some_field }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

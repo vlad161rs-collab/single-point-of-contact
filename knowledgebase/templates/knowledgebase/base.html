@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Единая точка обращения{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo-container">
+      <div class="company-info">
+        <h1 class="company-name">Single Point of Contact</h1>
+        <p class="company-subtitle">Единая точка обращения</p>
+      </div>
+    </div>
+  </header>
+
+  {% block nav %}
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="{% url 'knowledgebase:home' %}">🏠 Главная</a>
+      <a href="{% url 'portal:home' %}">🔐 Портал самообслуживания</a>
+      <a href="{% url 'knowledgebase:index' %}">📚 База знаний</a>
+      <a href="{% url 'knowledgebase:requests-page' %}">🎫 Единая точка обращений</a>
+    </div>
+
+    <div>
+      {% if user.is_authenticated %}
+        <span>Привет, {{ user.username }}!</span>
+        <form method="post" action="{% url 'logout' %}" class="logout-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'knowledgebase:index' %}">
+          <button type="submit">Выйти</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}?next={{ request.path }}">Войти</a>
+      {% endif %}
+    </div>
+  </nav>
+  {% endblock %}
+
+  <main>
+    {% if messages %}
+      <div class="messages-container">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <p>© {% now "Y" %} Single Point of Contact. Все права защищены.</p>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

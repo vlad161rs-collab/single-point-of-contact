@@ -1,0 +1,146 @@
+{% extends 'knowledgebase/base.html' %}
+{% load static %}
+
+{% block title %}{% if article %}Редактирование статьи{% else %}Создание статьи{% endif %}{% endblock %}
+
+{% block content %}
+<div class="article-form-container" style="max-width: 900px; margin: 40px auto; padding: 20px;">
+  
+  <!-- Хлебные крошки -->
+  <nav style="margin-bottom: 20px;">
+    <a href="{% url 'knowledgebase:index' %}" style="color: #3498db; text-decoration: none;">← База знаний</a>
+    <span style="color: #7f8c8d; margin: 0 10px;">/</span>
+    <span style="color: #7f8c8d;">{% if article %}Редактирование{% else %}Создание{% endif %}</span>
+  </nav>
+
+  <div class="form-wrapper" style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 2px 15px rgba(0,0,0,0.1);">
+    <h1 style="color: #2c3e50; margin-top: 0; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+      {% if article %}✏️ Редактирование статьи: {{ article.title }}{% else %}➕ Создание новой статьи{% endif %}
+    </h1>
+
+    {% if form.errors %}
+      <div class="alert alert-danger" style="background: #fee; border: 1px solid #fcc; color: #c33; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <strong>⚠️ Ошибки в форме:</strong>
+        <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <li>{{ field }}: {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="{{ form.title.id_for_label }}" style="display: block; margin-bottom: 8px; color: #34495e; font-weight: 500;">
+          Название статьи *
+        </label>
+        {{ form.title }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="{{ form.content.id_for_label }}" style="display: block; margin-bottom: 8px; color: #34495e; font-weight: 500;">
+          Содержимое *
+        </label>
+        {{ form.content }}
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+        <div class="form-group">
+          <label for="{{ form.image.id_for_label }}" style="display: block; margin-bottom: 8px; color: #34495e; font-weight: 500;">
+            🖼️ Изображение
+          </label>
+          {{ form.image }}
+          {% if article and article.image %}
+            <div style="margin-top: 10px;">
+              <p style="font-size: 12px; color: #7f8c8d; margin: 5px 0;">Текущее изображение:</p>
+              <img src="{{ article.image.url }}" alt="Изображение" style="max-width: 200px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.video.id_for_label }}" style="display: block; margin-bottom: 8px; color: #34495e; font-weight: 500;">
+            🎥 Видео
+          </label>
+          {{ form.video }}
+          {% if article and article.video %}
+            <div style="margin-top: 10px;">
+              <p style="font-size: 12px; color: #7f8c8d; margin: 5px 0;">Текущее видео:</p>
+              <video controls width="200" style="border-radius: 8px;">
+                <source src="{{ article.video.url }}" type="video/mp4">
+              </video>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.audio.id_for_label }}" style="display: block; margin-bottom: 8px; color: #34495e; font-weight: 500;">
+            🎵 Аудио
+          </label>
+          {{ form.audio }}
+          {% if article and article.audio %}
+            <div style="margin-top: 10px;">
+              <p style="font-size: 12px; color: #7f8c8d; margin: 5px 0;">Текущее аудио:</p>
+              <audio controls style="width: 100%;">
+                <source src="{{ article.audio.url }}" type="audio/mpeg">
+              </audio>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-actions" style="display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 2px solid #ecf0f1;">
+        <button type="submit" 
+                style="padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102, 126, 234, 0.4)';"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+          💾 Сохранить
+        </button>
+        <a href="{% url 'knowledgebase:index' %}" 
+           style="padding: 12px 30px; background: #95a5a6; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s;"
+           onmouseover="this.style.background='#7f8c8d'; this.style.transform='translateY(-2px)';"
+           onmouseout="this.style.background='#95a5a6'; this.style.transform='translateY(0)';">
+          ← Отмена
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .form-group input[type="text"],
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+  }
+  .form-group input[type="text"]:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+  }
+  .form-group textarea {
+    resize: vertical;
+    min-height: 200px;
+  }
+  .form-group input[type="file"] {
+    padding: 8px;
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .form-group input[type="file"]:hover {
+    border-color: #3498db;
+  }
+</style>
+{% endblock %}

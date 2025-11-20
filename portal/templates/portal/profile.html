@@ -1,0 +1,170 @@
+{% extends "knowledgebase/base.html" %}
+{% load static %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 40px auto; padding: 20px;">
+    <h2>Личный кабинет</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="profile-info" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h3>Информация о пользователе</h3>
+        <table class="table" style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 10px; font-weight: bold; width: 200px;">Имя пользователя:</td>
+                <td style="padding: 10px;">{{ user.username }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; font-weight: bold;">Роль:</td>
+                <td style="padding: 10px;">{{ profile.get_role_display }}</td>
+            </tr>
+            {% if profile.department %}
+            <tr>
+                <td style="padding: 10px; font-weight: bold;">Отдел:</td>
+                <td style="padding: 10px;">{{ profile.department.name }}</td>
+            </tr>
+            {% endif %}
+            {% if profile.position %}
+            <tr>
+                <td style="padding: 10px; font-weight: bold;">Должность:</td>
+                <td style="padding: 10px;">{{ profile.position }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <div class="edit-form" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+        <h3>Редактировать профиль</h3>
+        
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Ошибки в форме:</strong>
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group mb-3">
+                <label for="{{ form.first_name.id_for_label }}">Имя</label>
+                {{ form.first_name }}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.last_name.id_for_label }}">Фамилия</label>
+                {{ form.last_name }}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.email.id_for_label }}">Email *</label>
+                {{ form.email }}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.phone.id_for_label }}">Телефон</label>
+                {{ form.phone }}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.department.id_for_label }}">Отдел</label>
+                {{ form.department }}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.position.id_for_label }}">Должность</label>
+                {{ form.position }}
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                <a href="{% url 'portal:change_password' %}" class="btn btn-warning">Сменить пароль</a>
+            </div>
+        </form>
+    </div>
+
+    {% if user.is_staff or profile.is_admin %}
+    <div class="admin-links" style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 8px;">
+        <h3>Административные функции</h3>
+        <ul>
+            <li><a href="{% url 'portal:registration_requests' %}">Запросы на регистрацию</a></li>
+            <li><a href="{% url 'admin:index' %}">Админ-панель Django</a></li>
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .form-group label {
+        font-weight: 500;
+        margin-bottom: 5px;
+        display: block;
+    }
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 10px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .btn-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .btn-warning:hover {
+        background-color: #e0a800;
+    }
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+</style>
+{% endblock %}
+
+
+
+
+
+
+

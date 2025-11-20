@@ -1,0 +1,144 @@
+{% extends 'knowledgebase/base.html' %}
+{% load static %}
+
+{% block title %}{{ article.title }} — База знаний{% endblock %}
+
+{% block content %}
+<div class="article-container">
+  
+  <!-- Хлебные крошки -->
+  <nav class="breadcrumb">
+    <a href="{% url 'knowledgebase:index' %}">← База знаний</a>
+    <span>/</span>
+    <span>{{ article.title|truncatewords:5 }}</span>
+  </nav>
+
+  <!-- Статья -->
+  <article class="article-content">
+    <h1>{{ article.title }}</h1>
+    
+    <div class="article-meta">
+      <span>📅 Опубликовано: {{ article.pub_date|date:"d M Y H:i" }}</span>
+    </div>
+
+    <div class="article-body">
+      {{ article.content|linebreaks }}
+    </div>
+
+    <!-- Медиа файлы -->
+    {% if article.image %}
+      <div class="article-media">
+        <img src="{{ article.image.url }}" alt="{{ article.title }}">
+      </div>
+    {% endif %}
+
+    {% if article.video %}
+      <div class="article-media">
+        <video controls width="100%">
+          <source src="{{ article.video.url }}" type="video/mp4">
+          Ваш браузер не поддерживает видео тег.
+        </video>
+      </div>
+    {% endif %}
+
+    {% if article.audio %}
+      <div class="article-media">
+        <audio controls>
+          <source src="{{ article.audio.url }}" type="audio/mpeg">
+          Ваш браузер не поддерживает аудио элемент.
+        </audio>
+      </div>
+    {% endif %}
+
+    <!-- Действия -->
+    <div class="article-actions">
+      {% if user.is_authenticated and perms.knowledgebase.change_article %}
+        <a href="{% url 'knowledgebase:article_edit' article.id %}" class="btn btn-warning">
+          ✏️ Редактировать
+        </a>
+      {% endif %}
+      {% if user.is_authenticated and perms.knowledgebase.delete_article %}
+        <form method="post" action="{% url 'knowledgebase:article_delete' article.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" 
+                  onclick="return confirm('Удалить статью?')"
+                  class="btn btn-danger">
+            🗑️ Удалить
+          </button>
+        </form>
+      {% endif %}
+      <a href="{% url 'knowledgebase:index' %}" class="btn btn-secondary">
+        ← Назад к списку
+      </a>
+    </div>
+  </article>
+
+  <!-- Комментарии -->
+  <section class="comments-section">
+    <h2>
+      💬 Комментарии
+      <span class="comments-count">{{ comments|length }}</span>
+    </h2>
+
+    {% if comments %}
+      <div class="comments-list">
+        {% for comment in comments %}
+          <div class="comment-item">
+            <div class="comment-header">
+              <div>
+                <strong class="comment-author">
+                  {% if comment.user %}
+                    👤 {{ comment.user.username }}
+                  {% else %}
+                    👤 Аноним
+                  {% endif %}
+                </strong>
+                <span class="comment-date">
+                  {{ comment.created_at|date:"d M Y H:i" }}
+                </span>
+              </div>
+              {% if user.is_authenticated %}
+                {% if perms.knowledgebase.delete_comment or comment.user_id == user.id %}
+                  <form method="post" action="{% url 'knowledgebase:comment_delete' comment.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            onclick="return confirm('Удалить комментарий?')"
+                            class="comment-delete-btn">
+                      🗑️
+                    </button>
+                  </form>
+                {% endif %}
+              {% endif %}
+            </div>
+            <p class="comment-text">{{ comment.text|linebreaks }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="no-comments">Комментариев пока нет. Будьте первым! 💭</p>
+    {% endif %}
+
+    <div class="add-comment">
+      {% if user.is_authenticated %}
+        <h3>Добавить комментарий</h3>
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            {{ form.text }}
+          </div>
+          <button type="submit" class="btn btn-primary">📤 Отправить комментарий</button>
+        </form>
+      {% else %}
+        <div class="login-prompt">
+          <p>
+            Чтобы оставить комментарий,
+          </p>
+          <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">
+            🔐 Войдите в систему
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}
