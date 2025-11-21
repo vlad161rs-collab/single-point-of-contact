@@ -11,10 +11,8 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'  # Временно True дл�
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
 if not ALLOWED_HOSTS or (len(ALLOWED_HOSTS) == 1 and not ALLOWED_HOSTS[0]):
-    if DEBUG:
-        ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-    else:
-        ALLOWED_HOSTS = ['.herokuapp.com', 'single-point-of-contact-570955226190.herokuapp.com']
+    # Всегда включаем herokuapp.com, даже при DEBUG
+    ALLOWED_HOSTS = ['.herokuapp.com', 'single-point-of-contact-570955226190.herokuapp.com', 'localhost', '127.0.0.1']
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'
