@@ -120,19 +120,39 @@ if not DATABASE_URL:
             print(f"Ошибка чтения DATABASE_URL из .env файла: {e}")
 
 if DATABASE_URL:
-    # dj_database_url автоматически обрабатывает параметры из URL, включая sslmode
-    db_config = dj_database_url.config(
-        default=DATABASE_URL,
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-    # Исправляем username для Supabase pooler (dj_database_url может неправильно парсить username с точкой)
+    # Для Supabase pooler парсим connection string вручную, чтобы избежать проблем с URL-кодированием
     if 'pooler.supabase.com' in DATABASE_URL:
-        # Для pooler всегда используем полное имя пользователя
-        db_config['USER'] = 'postgres.nguzsniqevzzkloqcziu'
-    DATABASES = {
-        'default': db_config
-    }
+        # Парсим connection string вручную для правильной обработки username и password
+        import urllib.parse
+        parsed = urllib.parse.urlparse(DATABASE_URL)
+        # Декодируем пароль из URL-кодирования (%24 -> $)
+        password = urllib.parse.unquote(parsed.password) if parsed.password else ''
+        # Извлекаем username (может быть с точкой)
+        username = parsed.username if parsed.username else 'postgres'
+        
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': parsed.path.lstrip('/') or 'postgres',
+                'USER': username,
+                'PASSWORD': password,
+                'HOST': parsed.hostname,
+                'PORT': parsed.port or 5432,
+                'OPTIONS': {
+                    'sslmode': 'require',
+                },
+                'CONN_MAX_AGE': 600,
+            }
+        }
+    else:
+        # Для других баз данных используем стандартный парсер
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
 else:
     DATABASES = {
         'default': {
