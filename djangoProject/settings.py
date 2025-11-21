@@ -5,7 +5,8 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-j6a9=s&r!ez$n(-5*8802addx4*h-sbc@ev3vebmwfa!($wpag')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# Временно включаем DEBUG для диагностики ошибки 500
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'  # Временно True для диагностики
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
