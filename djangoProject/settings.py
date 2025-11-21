@@ -127,8 +127,9 @@ if DATABASE_URL:
         conn_max_age=600,
         conn_health_checks=True,
     )
-    # Исправляем username для Supabase pooler (может быть неправильно распарсен)
-    if 'pooler.supabase.com' in DATABASE_URL and 'postgres.nguzsniqevzzkloqcziu' in DATABASE_URL:
+    # Исправляем username для Supabase pooler (dj_database_url может неправильно парсить username с точкой)
+    if 'pooler.supabase.com' in DATABASE_URL:
+        # Для pooler всегда используем полное имя пользователя
         db_config['USER'] = 'postgres.nguzsniqevzzkloqcziu'
     DATABASES = {
         'default': db_config
