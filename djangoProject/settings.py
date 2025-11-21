@@ -121,12 +121,18 @@ if not DATABASE_URL:
             print(f"Ошибка чтения DATABASE_URL из .env файла: {e}")
 
 if DATABASE_URL:
+    db_config = dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+    # Добавляем SSL настройки для Supabase (pooler или direct)
+    if 'supabase' in DATABASE_URL.lower() or 'pooler.supabase' in DATABASE_URL.lower():
+        if 'OPTIONS' not in db_config:
+            db_config['OPTIONS'] = {}
+        db_config['OPTIONS']['sslmode'] = 'require'
     DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        'default': db_config
     }
 else:
     DATABASES = {
