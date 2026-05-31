@@ -121,15 +121,12 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def clean(self):
-        """Ensure comment is associated with either article or request, but not both."""
         if not self.article and not self.request:
             raise ValidationError('Комментарий должен быть привязан к статье или заявке.')
         if self.article and self.request:
             raise ValidationError('Комментарий не может быть привязан одновременно к статье и заявке.')
 
     def save(self, *args, **kwargs):
-        # Валидируем только если поля article или request установлены
-        # Это позволяет сохранять объект через form.save(commit=False) без ошибок
         if self.article or self.request:
             self.full_clean()
         super().save(*args, **kwargs)

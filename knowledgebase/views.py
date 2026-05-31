@@ -135,7 +135,6 @@ def requests_page_view(request):
 
 @login_required
 def optimized_requests_view(request):
-    # Optimize query by prefetching related comments
     requests = Request.objects.prefetch_related('comments__user').all()
     return render(request, 'knowledgebase/requests.html', {'requests': requests})
 
@@ -148,7 +147,6 @@ def change_request_status(request, request_id):
     old_status = req.status
     new_status = request.POST.get('status')
     
-    # Проверяем, что статус валидный
     valid_statuses = ['New', 'In Progress', 'Completed', 'Cancelled']
     if new_status in valid_statuses:
         req.status = new_status
@@ -206,11 +204,6 @@ def add_comment_to_request(request, request_id):
 
 
 class RequestAPI(APIView):
-    """
-    API для работы с заявками.
-    - GET: доступен всем (в т.ч. анонимным)
-    - POST: только авторизованным пользователям
-    """
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):

@@ -29,8 +29,6 @@ class RequestForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Status should not be editable by regular users in the form
-        # It should be managed through admin or special views
         self.fields['title'].required = True
         self.fields['description'].required = True
 
@@ -53,16 +51,11 @@ class CommentForm(forms.ModelForm):
         self.fields['text'].label = 'Комментарий'
     
     def _post_clean(self):
-        """Переопределяем пост-валидацию, чтобы не вызывать clean() модели до установки article/request"""
-        # Вызываем construct_instance для установки значений полей формы в instance
-        # Но НЕ вызываем self.instance.full_clean(), 
-        # так как article/request будут установлены после form.save(commit=False)
         from django.forms.models import construct_instance
         
         opts = self._meta
         exclude = self._get_validation_exclusions()
         
-        # Foreign Keys being used to represent inline relationships
         from django.forms.models import InlineForeignKeyField
         for name, field in self.fields.items():
             if isinstance(field, InlineForeignKeyField):
@@ -74,6 +67,3 @@ class CommentForm(forms.ModelForm):
             )
         except forms.ValidationError as e:
             self._update_errors(e)
-        
-        # НЕ вызываем self.instance.full_clean(exclude=exclude)
-        # Валидация модели будет вызвана вручную в views после установки article/request

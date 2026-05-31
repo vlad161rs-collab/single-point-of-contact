@@ -18,7 +18,6 @@ from knowledgebase.models import Request, Article, Comment
 
 
 def portal_home(request):
-    """Главная страница портала самообслуживания"""
     return render(request, 'portal/home.html', {
         'user': request.user,
         'has_profile': hasattr(request.user, 'profile') if request.user.is_authenticated else False
@@ -27,7 +26,6 @@ def portal_home(request):
 
 @login_required
 def dashboard(request):
-    """Личный кабинет в зависимости от роли"""
     profile, created = UserProfile.objects.get_or_create(user=request.user)
     
     context = {
@@ -35,7 +33,6 @@ def dashboard(request):
         'user': request.user,
     }
     
-    # Статистика для пользователя
     if profile.role == 'user':
         context['my_requests'] = Request.objects.filter(
             created_by=request.user
@@ -44,7 +41,6 @@ def dashboard(request):
         context['my_comments'] = Comment.objects.filter(user=request.user)[:5]
         return render(request, 'portal/dashboard_user.html', context)
     
-    # Статистика для модератора
     elif profile.role == 'moderator':
         context['pending_requests'] = Request.objects.filter(status='New')[:10]
         context['pending_registrations'] = UserRegistrationRequest.objects.filter(status='pending')[:5]
@@ -52,7 +48,6 @@ def dashboard(request):
         context['total_articles'] = Article.objects.count()
         return render(request, 'portal/dashboard_moderator.html', context)
     
-    # Статистика для администратора
     elif profile.role == 'admin' or request.user.is_superuser:
         context['pending_registrations'] = UserRegistrationRequest.objects.filter(status='pending')
         context['total_users'] = User.objects.count()
@@ -62,7 +57,6 @@ def dashboard(request):
         context['users_by_role'] = UserProfile.objects.values('role').annotate(count=Count('id'))
         return render(request, 'portal/dashboard_admin.html', context)
     
-    # Статистика для службы поддержки
     elif profile.role == 'support':
         context['active_requests'] = Request.objects.filter(
             Q(status='New') | Q(status='In Progress')
@@ -72,12 +66,10 @@ def dashboard(request):
         )[:10]
         return render(request, 'portal/dashboard_support.html', context)
     
-    # По умолчанию - обычный пользователь
     return render(request, 'portal/dashboard_user.html', context)
 
 
 def register_request(request):
-    """Запрос на регистрацию (требует одобрения админа)"""
     if request.user.is_authenticated:
         messages.info(request, 'Вы уже зарегистрированы.')
         return redirect('portal:home')
@@ -115,13 +107,11 @@ def register_request(request):
 
 
 def register_success(request):
-    """Страница успешной отправки запроса на регистрацию"""
     return render(request, 'portal/register_success.html')
 
 
 @login_required
 def profile_view(request):
-    """Просмотр и редактирование профиля пользователя"""
     profile, created = UserProfile.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
@@ -143,7 +133,6 @@ def profile_view(request):
 
 @login_required
 def change_password(request):
-    """Смена пароля пользователя"""
     if request.method == 'POST':
         form = PasswordChangeCustomForm(request.user, request.POST)
         if form.is_valid():
@@ -157,7 +146,7 @@ def change_password(request):
                         subject='Пароль изменен',
                         message=f'Ваш пароль был успешно изменен.\n\n'
                                f'Если это были не вы, немедленно свяжитесь с администратором.\n\n'
-                               f'Ссылка для входа: http://127.0.0.1:8000/accounts/login/',
+                               f'Ссылка для входа: {settings.BASE_URL.rstrip("/")}/accounts/login/',
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[request.user.email],
                         fail_silently=False,
@@ -179,7 +168,6 @@ def change_password(request):
 @login_required
 @permission_required('portal.approve_userregistrationrequest', raise_exception=True)
 def registration_requests_list(request):
-    """Список запросов на регистрацию (для админов)"""
     status_filter = request.GET.get('status', '')
     requests = UserRegistrationRequest.objects.all().order_by('-created_at')
     
@@ -198,7 +186,6 @@ def registration_requests_list(request):
 @login_required
 @permission_required('portal.approve_userregistrationrequest', raise_exception=True)
 def approve_registration(request, request_id):
-    """Одобрение запроса на регистрацию"""
     reg_request = get_object_or_404(UserRegistrationRequest, id=request_id, status='pending')
     
     if request.method == 'POST':
@@ -285,7 +272,7 @@ def approve_registration(request, request_id):
                            f'Ваш логин: {user.username}\n'
                            f'Пароль: {password_message}\n\n'
                            f'Пожалуйста, войдите в систему по ссылке ниже.\n\n'
-                           f'Ссылка для входа: http://127.0.0.1:8000/accounts/login/\n\n'
+                           f'Ссылка для входа: {settings.BASE_URL.rstrip("/")}/accounts/login/\n\n'
                            f'После входа вы сможете изменить пароль в личном кабинете.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
@@ -310,7 +297,6 @@ def approve_registration(request, request_id):
 @login_required
 @permission_required('portal.approve_userregistrationrequest', raise_exception=True)
 def reject_registration(request, request_id):
-    """Отклонение запроса на регистрацию"""
     reg_request = get_object_or_404(UserRegistrationRequest, id=request_id, status='pending')
     
     if request.method == 'POST':
@@ -344,7 +330,6 @@ def reject_registration(request, request_id):
 
 
 def kb_list(request):
-    """Список статей базы знаний"""
     from urllib.parse import quote
     from django.urls import reverse
     q = request.GET.get('q', '')
@@ -353,5 +338,4 @@ def kb_list(request):
 
 
 def request_new(request):
-    """Создание новой заявки"""
     return redirect('knowledgebase:requests-page')

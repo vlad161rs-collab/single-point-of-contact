@@ -154,7 +154,6 @@ class CommentModelTest(TestCase):
         self.assertEqual(self.comment.article, self.article)
 
     def test_comment_validation(self):
-        # Тест валидации - комментарий должен быть привязан к статье или заявке
         invalid_comment = Comment(text="Invalid")
         with self.assertRaises(Exception):
             invalid_comment.clean()

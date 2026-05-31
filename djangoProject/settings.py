@@ -1,18 +1,22 @@
 import os
+import sys
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-j6a9=s&r!ez$n(-5*8802addx4*h-sbc@ev3vebmwfa!($wpag')
-# Временно включаем DEBUG для диагностики ошибки 500
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'  # Временно True для диагностики
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
 if not ALLOWED_HOSTS or (len(ALLOWED_HOSTS) == 1 and not ALLOWED_HOSTS[0]):
-    # Всегда включаем herokuapp.com, даже при DEBUG
-    ALLOWED_HOSTS = ['.herokuapp.com', 'single-point-of-contact-570955226190.herokuapp.com', 'localhost', '127.0.0.1']
+    if DEBUG:
+        ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    else:
+        ALLOWED_HOSTS = ['.herokuapp.com', 'single-point-of-contact-570955226190.herokuapp.com']
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'
@@ -120,32 +124,24 @@ if not DATABASE_URL:
             print(f"Ошибка чтения DATABASE_URL из .env файла: {e}")
 
 if DATABASE_URL:
-    # Для Supabase pooler парсим connection string вручную, чтобы избежать проблем с URL-кодированием
     if 'pooler.supabase.com' in DATABASE_URL:
-        # Парсим connection string вручную для правильной обработки username и password
-        import urllib.parse
-        parsed = urllib.parse.urlparse(DATABASE_URL)
-        # Декодируем пароль из URL-кодирования (%24 -> $)
-        password = urllib.parse.unquote(parsed.password) if parsed.password else ''
-        # Извлекаем username (может быть с точкой)
-        username = parsed.username if parsed.username else 'postgres'
-        
+        parsed = urlparse(DATABASE_URL)
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql',
                 'NAME': parsed.path.lstrip('/') or 'postgres',
-                'USER': username,
-                'PASSWORD': password,
+                'USER': unquote(parsed.username or 'postgres'),
+                'PASSWORD': unquote(parsed.password or ''),
                 'HOST': parsed.hostname,
                 'PORT': parsed.port or 5432,
                 'OPTIONS': {
                     'sslmode': 'require',
                 },
                 'CONN_MAX_AGE': 600,
+                'CONN_HEALTH_CHECKS': True,
             }
         }
     else:
-        # Для других баз данных используем стандартный парсер
         DATABASES = {
             'default': dj_database_url.config(
                 default=DATABASE_URL,
@@ -181,7 +177,17 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-if not DEBUG:
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        'CSRF_TRUSTED_ORIGINS',
+        'https://*.herokuapp.com,https://single-point-of-contact-570955226190.herokuapp.com'
+    ).split(',')
+    if origin.strip()
+]
+
+if not DEBUG and not TESTING:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -191,13 +197,15 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+else:
+    SECURE_SSL_REDIRECT = False
 
-CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG and not TESTING
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
-SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG and not TESTING
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
